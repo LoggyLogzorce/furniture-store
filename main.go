@@ -21,7 +21,7 @@ func main() {
 	}
 
 	db.Connect()
-	db.Migrate()
+	//db.Migrate()
 
 	log.Println("Listening port :8080...")
 	err := server.ListenAndServe()
