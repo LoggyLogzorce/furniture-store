@@ -1,6 +1,6 @@
 package entity
 
-import "furniture_store/db"
+import "magazine/db"
 
 type Review struct {
 	Id        uint32  `json:"id" gorm:"primaryKey"`

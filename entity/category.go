@@ -1,7 +1,7 @@
 package entity
 
 import (
-	"furniture_store/db"
+	"magazine/db"
 )
 
 type Category struct {
