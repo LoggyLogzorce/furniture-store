@@ -17,7 +17,8 @@
         <label for="password">Password:</label>
         <input type="password" id="password" name="password" required>
 
-        <input type="submit" value="Login">
+        <input type="submit" value="Login"><br>
+        <br><input onclick="location.href='/register'" type="submit" value="Register"></input>
     </form>
 </div>
 
@@ -41,7 +42,11 @@
                     throw new Error("Authentication failed");
                 }
                 // Если ответ от сервера успешен, перенаправить пользователя на другую страницу
-                window.location.href = "/homepage"; // Перенаправление на другую страницу
+                if (response.url === "/admin") {
+                    window.location.href = "/admin";
+                } else {
+                    window.location.href = "/homepage";
+                }
             })
             .catch(error => {
                 console.error("Error:", error);

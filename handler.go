@@ -15,7 +15,6 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
-	"time"
 )
 
 type Info struct {
@@ -79,7 +78,12 @@ func mainHandle(w http.ResponseWriter, r *http.Request) {
 	pathArr := strings.Split(path, "/")
 
 	if pathArr[0] == "" {
-		if homepage(ctx) {
+		validToken, role := homepage(ctx)
+		if validToken && role {
+			sendFileContent("./static/html/admin.html", ctx)
+			return
+		}
+		if validToken && !role {
 			sendFileContent("./static/html/homepage.html", ctx)
 			return
 		}
@@ -88,7 +92,8 @@ func mainHandle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if pathArr[0] == "homepage" {
-		if homepage(ctx) {
+		validToken, _ := homepage(ctx)
+		if validToken {
 			sendFileContent("./static/html/homePage.html", ctx)
 			return
 		}
@@ -96,34 +101,57 @@ func mainHandle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if pathArr[0] == "register" {
+		sendFileContent("./static/html/register.html", ctx)
+		return
+	}
+
 	if pathArr[0] == "login" {
-		l := r.FormValue("username")
-		p := r.FormValue("password")
-
 		var user entity.User
-		db.DB().Where("login = ? and password = ?", l, p).First(&user)
+		user.Login = r.FormValue("username")
+		user.Password = r.FormValue("password")
 
-		if user.Uid != 0 {
-			token := entity.Token{
-				Uid:     user.Uid,
-				Token:   api.CreateToken(user.Login, user.Password, 2*time.Minute),
-				Expired: time.Now().Add(2 * time.Minute),
-			}
+		cookie, err, admin := api.UserRead(user)
+		fmt.Println(admin)
 
-			cookie := http.Cookie{
-				Name:  "token",
-				Value: token.Token,
-				Path:  "/",
+		if err == true {
+			http.SetCookie(ctx.Response, &cookie)
+			switch admin {
+			case true:
+				http.Redirect(ctx.Response, ctx.Request, "/admin", http.StatusOK)
+
+			case false:
+				http.Redirect(ctx.Response, ctx.Request, "/homepage", http.StatusOK)
 			}
-			http.SetCookie(w, &cookie)
-			return
 		}
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
+	if pathArr[0] == "logout" {
+		var user entity.User
+		user.Name = r.FormValue("username")
+		user.Login = r.FormValue("login")
+		user.Password = r.FormValue("password")
+		user.Addm = false
+
+		err := api.CreateUser(user)
+		if err == true {
+			http.Redirect(ctx.Response, ctx.Request, "/", http.StatusOK)
+			return
+		}
+		http.Error(w, "Unregistered", http.StatusConflict)
+		return
+	}
+
 	if pathArr[0] == "admin" {
-		sendFileContent("./static/html/admin.html", ctx)
+		validToken, role := homepage(ctx)
+		if validToken && role {
+			sendFileContent("./static/html/admin.html", ctx)
+			return
+		}
+		sendFileContent("./static/html/index.html", ctx)
+		return
 	}
 
 	if pathArr[0] == "data" {
@@ -168,16 +196,16 @@ func sendFileContent(filename string, ctx engine.Context) {
 	}
 }
 
-func homepage(ctx engine.Context) bool {
+func homepage(ctx engine.Context) (bool, bool) {
 	cookie, err := ctx.Request.Cookie("token")
 	if err == nil {
 		// Проверка валидности токена
 		if api.IsValidateToken(cookie.Value) {
-			// Если токен валиден, перенаправляем пользователя на главную страниц
-			return true
+			role := api.GetRoleFromToken(cookie.Value)
+			return true, role
 		}
 	}
-	return false
+	return false, false
 }
 
 func static(path string) (string, bool) {

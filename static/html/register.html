@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Login</title>
+    <link href="../css/style.css" rel="stylesheet">
+</head>
+<body>
+
+<div class="container">
+    <h2>Login</h2>
+    <form id="loginForm">
+        <label for="username">Username:</label>
+        <input id="username" name="username" required type="text">
+
+        <label for="login">Login:</label>
+        <input id="login" name="login" required type="text">
+
+        <label for="password">Password:</label>
+        <input id="password" name="password" required type="password">
+
+        <label for="repeatPassword">Repeat password:</label>
+        <input id="repeatPassword" name="repeatPassword" required type="password">
+
+        <input type="submit" value="Register"><br>
+        <br><input onclick="location.href='/'" type="submit" value="Login"></input>
+    </form>
+</div>
+
+<script>
+    document.getElementById("loginForm").addEventListener("submit", function (event) {
+        event.preventDefault(); // Предотвращение стандартного поведения формы (отправка)
+
+        var username = document.getElementById("username").value;
+        var login = document.getElementById("login").value;
+        var password = document.getElementById("password").value;
+        var repeatPassword = document.getElementById("repeatPassword").value;
+
+        if (password !== repeatPassword) {
+            alert("Passwords do not match");
+            return;
+        }
+
+        var formData = new FormData();
+        formData.append("username", username);
+        formData.append("login", login);
+        formData.append("password", password);
+
+        fetch("/logout", {
+            method: "POST",
+            body: formData
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Authentication failed");
+                }
+                // Если ответ от сервера успешен, перенаправить пользователя на другую страницу
+                window.location.href = "/"; // Перенаправление на другую страницу
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                // Обработка ошибки регистрации
+                alert("Registration failed. Пользователь с таким логином уже существует.");
+            });
+    });
+
+</script>
+
+</body>
+</html>

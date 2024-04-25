@@ -2,19 +2,21 @@ package api
 
 import (
 	"fmt"
+	"furniture_store/entity"
 	"github.com/dgrijalva/jwt-go"
+	"log"
 	"time"
 )
 
 var secretKey = []byte("secret_key")
 
 // CreateToken Создать JWT токен с использованием секретного ключа
-func CreateToken(username string, password string, expirationTime time.Duration) string {
+func CreateToken(username string, admin bool, expirationTime time.Duration) string {
 	// Создать структуру для хранения данных в токене
 	claims := jwt.MapClaims{
-		"username": username,
-		"password": password,
-		"exp":      time.Now().Add(expirationTime).Unix(),
+		"login": username,
+		"rol":   admin,
+		"exp":   time.Now().Add(expirationTime).Unix(),
 	}
 
 	// Создать токен с указанными данными и алгоритмом подписи
@@ -59,4 +61,22 @@ func IsValidateToken(tokenString string) bool {
 	}
 
 	return true // Токен действителен
+}
+
+func GetRoleFromToken(tokenString string) bool {
+	token, err := jwt.ParseWithClaims(tokenString, &entity.Claims{}, func(token *jwt.Token) (interface{}, error) {
+		return secretKey, nil
+	})
+
+	if err != nil {
+		log.Println(err)
+	}
+
+	// Извлекаем утверждения (claims) из токена
+	if claims, ok := token.Claims.(*entity.Claims); ok {
+		// Используем роль пользователя для выполнения соответствующих действий
+		fmt.Println(claims.Role)
+		return claims.Role
+	}
+	return false
 }
