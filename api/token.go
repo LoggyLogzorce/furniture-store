@@ -1,21 +1,20 @@
 package api
 
 import (
+	"errors"
 	"fmt"
-	"furniture_store/entity"
 	"github.com/dgrijalva/jwt-go"
-	"log"
 	"time"
 )
 
 var secretKey = []byte("secret_key")
 
 // CreateToken Создать JWT токен с использованием секретного ключа
-func CreateToken(username string, admin bool, expirationTime time.Duration) string {
+func CreateToken(username string, role string, expirationTime time.Duration) string {
 	// Создать структуру для хранения данных в токене
 	claims := jwt.MapClaims{
 		"login": username,
-		"rol":   admin,
+		"role":  role,
 		"exp":   time.Now().Add(expirationTime).Unix(),
 	}
 
@@ -63,20 +62,26 @@ func IsValidateToken(tokenString string) bool {
 	return true // Токен действителен
 }
 
-func GetRoleFromToken(tokenString string) bool {
-	token, err := jwt.ParseWithClaims(tokenString, &entity.Claims{}, func(token *jwt.Token) (interface{}, error) {
+func GetRoleFromToken(tokenString string) (string, error) {
+	// Парсинг JWT токена
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		// В этой функции необходимо вернуть секретный ключ, используемый для подписи токена
 		return secretKey, nil
 	})
 
+	// Проверка на ошибку при парсинге токена
 	if err != nil {
-		log.Println(err)
+		return "", err
 	}
 
-	// Извлекаем утверждения (claims) из токена
-	if claims, ok := token.Claims.(*entity.Claims); ok {
-		// Используем роль пользователя для выполнения соответствующих действий
-		fmt.Println(claims.Role)
-		return claims.Role
+	// Проверка наличия утверждений (claims) в токене
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		// Получение роли пользователя из утверждений
+		if role, exists := claims["role"].(string); exists {
+			return role, nil
+		}
 	}
-	return false
+
+	// Если роль не найдена в токене, возвращаем ошибку
+	return "", errors.New("role not found in token")
 }

@@ -26,23 +26,24 @@
     document.getElementById("loginForm").addEventListener("submit", function(event) {
         event.preventDefault(); // Предотвращение стандартного поведения формы (отправка)
 
-        var username = document.getElementById("username").value;
-        var password = document.getElementById("password").value;
-
-        var formData = new FormData();
-        formData.append("username", username);
-        formData.append("password", password);
+        var formData = new FormData(this);
 
         fetch("/login", {
             method: "POST",
-            body: formData
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: new URLSearchParams(formData)
         })
             .then(response => {
                 if (!response.ok) {
                     throw new Error("Authentication failed");
                 }
-                // Если ответ от сервера успешен, перенаправить пользователя на другую страницу
-                if (response.url === "/admin") {
+                return response.json();
+            })
+            .then(data => {
+                // Перенаправляем пользователя в зависимости от полученной роли
+                if (data.role === "admin") {
                     window.location.href = "/admin";
                 } else {
                     window.location.href = "/homepage";
@@ -50,8 +51,8 @@
             })
             .catch(error => {
                 console.error("Error:", error);
-                // Обработка ошибки аутентификации
-                alert("Authentication failed. Please check your credentials and try again.");
+                // Вывод сообщения об ошибке авторизации
+                alert("Authentication failed. Please check your credentials and try again.")
             });
     });
 

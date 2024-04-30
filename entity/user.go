@@ -7,7 +7,7 @@ type User struct {
 	Name     string `json:"name"`
 	Login    string `json:"login"`
 	Password string `json:"password"`
-	Addm     bool   `json:"addm"`
+	Role     string `json:"role"`
 }
 
 func (u *User) TableName() string {

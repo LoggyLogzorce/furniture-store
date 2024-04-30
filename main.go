@@ -10,8 +10,8 @@ import (
 func main() {
 	m := http.NewServeMux()
 
+	m.HandleFunc("/", userHandle)
 	m.HandleFunc("/update/", updateHandle)
-	m.HandleFunc("/", mainHandle)
 
 	server := &http.Server{
 		Addr:         ":8080",

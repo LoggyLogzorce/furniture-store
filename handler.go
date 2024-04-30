@@ -9,6 +9,7 @@ import (
 	"furniture_store/engine"
 	"furniture_store/entity"
 	"io/ioutil"
+	"log"
 	"mime"
 	"net/http"
 	"path/filepath"
@@ -67,7 +68,7 @@ func init() {
 	accessExceptions = cfg.List
 }
 
-func mainHandle(w http.ResponseWriter, r *http.Request) {
+func userHandle(w http.ResponseWriter, r *http.Request) {
 	ctx := engine.Context{
 		Response: w,
 		Request:  r,
@@ -79,12 +80,24 @@ func mainHandle(w http.ResponseWriter, r *http.Request) {
 
 	if pathArr[0] == "" {
 		validToken, role := homepage(ctx)
-		if validToken && role {
-			sendFileContent("./static/html/admin.html", ctx)
-			return
+		if validToken {
+			switch role {
+			case "admin":
+				sendFileContent("./static/html/admin.html", ctx)
+				return
+			case "user":
+				sendFileContent("./static/html/homePage.html", ctx)
+				return
+			}
 		}
-		if validToken && !role {
-			sendFileContent("./static/html/homepage.html", ctx)
+		sendFileContent("./static/html/index.html", ctx)
+		return
+	}
+
+	if pathArr[0] == "admin" {
+		validToken, role := homepage(ctx)
+		if validToken && role == "admin" {
+			sendFileContent("./static/html/admin.html", ctx)
 			return
 		}
 		sendFileContent("./static/html/index.html", ctx)
@@ -111,21 +124,27 @@ func mainHandle(w http.ResponseWriter, r *http.Request) {
 		user.Login = r.FormValue("username")
 		user.Password = r.FormValue("password")
 
-		cookie, err, admin := api.UserRead(user)
-		fmt.Println(admin)
+		cookie, role := api.UserRead(user)
 
-		if err == true {
-			http.SetCookie(ctx.Response, &cookie)
-			switch admin {
-			case true:
-				http.Redirect(ctx.Response, ctx.Request, "/admin", http.StatusOK)
-
-			case false:
-				http.Redirect(ctx.Response, ctx.Request, "/homepage", http.StatusOK)
-			}
+		// Возвращаем роль пользователя в формате JSON
+		response := struct {
+			Role string `json:"role"`
+		}{
+			Role: role,
 		}
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
+
+		ctx.Response.Header().Set("Content-Type", "application/json")
+		if cookie.Value != "" {
+			// Если аутентификация прошла успешно, отправляем роль пользователя
+			http.SetCookie(ctx.Response, &cookie)
+			ctx.Response.WriteHeader(http.StatusOK)
+			err := json.NewEncoder(ctx.Response).Encode(response)
+			if err != nil {
+				log.Println(err)
+			}
+		} else {
+			http.Error(ctx.Response, "Unauthorized", http.StatusUnauthorized)
+		}
 	}
 
 	if pathArr[0] == "logout" {
@@ -133,7 +152,7 @@ func mainHandle(w http.ResponseWriter, r *http.Request) {
 		user.Name = r.FormValue("username")
 		user.Login = r.FormValue("login")
 		user.Password = r.FormValue("password")
-		user.Addm = false
+		user.Role = "user"
 
 		err := api.CreateUser(user)
 		if err == true {
@@ -141,16 +160,6 @@ func mainHandle(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		http.Error(w, "Unregistered", http.StatusConflict)
-		return
-	}
-
-	if pathArr[0] == "admin" {
-		validToken, role := homepage(ctx)
-		if validToken && role {
-			sendFileContent("./static/html/admin.html", ctx)
-			return
-		}
-		sendFileContent("./static/html/index.html", ctx)
 		return
 	}
 
@@ -196,16 +205,19 @@ func sendFileContent(filename string, ctx engine.Context) {
 	}
 }
 
-func homepage(ctx engine.Context) (bool, bool) {
+func homepage(ctx engine.Context) (bool, string) {
 	cookie, err := ctx.Request.Cookie("token")
 	if err == nil {
 		// Проверка валидности токена
 		if api.IsValidateToken(cookie.Value) {
-			role := api.GetRoleFromToken(cookie.Value)
+			role, e := api.GetRoleFromToken(cookie.Value)
+			if e != nil {
+				log.Println(e)
+			}
 			return true, role
 		}
 	}
-	return false, false
+	return false, ""
 }
 
 func static(path string) (string, bool) {
@@ -217,10 +229,6 @@ func static(path string) (string, bool) {
 		return path, true
 	}
 	return "", false
-}
-
-func sendFile(path string, ctx engine.Context) {
-	http.ServeFile(ctx.Response, ctx.Request, path)
 }
 
 func updateHandle(w http.ResponseWriter, r *http.Request) {
@@ -241,17 +249,12 @@ func updateHandle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	Uid := uint32(uintVal)
-	Addm, err := strconv.ParseBool(updatedData["Additional Permission"])
-	if err != nil {
-		fmt.Println("Ошибка конвертации:", err)
-		return
-	}
 	user := entity.User{
 		Uid:      Uid,
 		Name:     updatedData["Name"],
 		Login:    updatedData["Login"],
 		Password: updatedData["Password"],
-		Addm:     Addm,
+		Role:     updatedData["Additional Permission"],
 	}
 
 	db.DB().Save(&user)

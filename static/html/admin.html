@@ -57,20 +57,31 @@
                 tr.appendChild(td); // Добавляем ячейку в строку
             });
 
+            // Добавляем кнопки "Редактировать" и "Удалить" в общий контейнер
+            const tdActions = document.createElement('td');
+            tdActions.className = 'action-buttons'; // Добавляем класс для стилизации кнопок
+            tr.appendChild(tdActions); // Добавляем контейнер в строку
+
             // Добавляем кнопку "Редактировать" с обработчиком события
-            // Добавляем кнопку "Редактировать" с атрибутом data-uid и обработчиком события
             const editButton = document.createElement('button');
             editButton.textContent = 'Редактировать';
             editButton.onclick = function() {
                 editRow(tr); // Передаем объект строки и идентификатор
             };
-            const tdActions = document.createElement('td');
-            tdActions.appendChild(editButton);
-            tr.appendChild(tdActions);
+            tdActions.appendChild(editButton); // Добавляем кнопку в контейнер
+
+            // Добавляем кнопку "Удалить" с обработчиком события
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Удалить';
+            deleteButton.onclick = function () {
+                deleteRow(tr); // Передаем объект строки для удаления
+            };
+            tdActions.appendChild(deleteButton); // Добавляем кнопку в контейнер
 
             tbody.appendChild(tr); // Добавляем строку в tbody
         });
     }
+
 
     // Функция для редактирования строки
     function editRow(row) {
@@ -95,6 +106,31 @@
         tdActions.appendChild(saveButton); // Добавляем кнопку "Сохранить"
     }
 
+    function deleteRow(row) {
+        const rowData = {}; // Создаем объект с данными строки
+        row.querySelectorAll('td').forEach((td, index) => {
+            const columnName = document.querySelector(`#data-table th:nth-child(${index + 1})`).textContent;
+            rowData[columnName] = td.textContent; // Заполняем объект данными из ячеек строки
+        });
+
+        // Отправляем запрос DELETE на сервер с данными строки для удаления
+        fetch('/delete', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(rowData)
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Row deleted:', data);
+                fetchData(); // Обновляем данные после удаления
+            })
+            .catch(error => {
+                console.error('Error deleting row:', error);
+            });
+    }
+
     // Функция для сохранения изменений строки
     function saveRow(row) {
         const inputs = row.querySelectorAll('input');
@@ -116,12 +152,39 @@
             .then(response => response.json())
             .then(data => {
                 console.log('Row updated:', data);
-                fetchData(); // Обновляем данные после обновления
+                fetchData(); // Обновляем данные
+
+                // Восстанавливаем кнопку "Удалить"
+                const tdActions = row.querySelector('.action-buttons');
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Удалить';
+                deleteButton.onclick = function () {
+                    deleteRow(row); // Передаем объект строки для удаления
+                };
+                tdActions.appendChild(deleteButton); // Добавляем кнопку "Удалить"
             })
             .catch(error => {
                 console.error('Error updating row:', error);
+            })
+            .finally(() => {
+                // Удаляем все поля ввода из ячеек
+                inputs.forEach(input => {
+                    const td = input.parentElement;
+                    td.textContent = input.value;
+                });
+
+                // Заменяем кнопку "Сохранить" на кнопку "Редактировать"
+                const editButton = document.createElement('button');
+                editButton.textContent = 'Редактировать';
+                editButton.onclick = function () {
+                    editRow(row); // Передаем объект строки и идентификатор
+                };
+                const tdActions = row.querySelector('.action-buttons');
+                tdActions.textContent = ''; // Очищаем содержимое ячейки с кнопкой
+                tdActions.appendChild(editButton); // Добавляем кнопку "Редактировать"
             });
     }
+
 </script>
 </body>
 </html>

@@ -14,6 +14,6 @@ type Token struct {
 
 type Claims struct {
 	Login string `json:"login"`
-	Role  bool   `json:"role"`
+	Role  string `json:"role"`
 	jwt.StandardClaims
 }

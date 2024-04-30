@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"furniture_store/db"
 	"furniture_store/entity"
 	"net/http"
@@ -18,13 +17,12 @@ func CreateUser(user entity.User) bool {
 	return false
 }
 
-func UserRead(user entity.User) (http.Cookie, bool, bool) {
+func UserRead(user entity.User) (http.Cookie, string) {
 	db.DB().Where("login = ?", user.Login).First(&user)
-	fmt.Println(user)
 	if user.Uid != 0 {
 		token := entity.Token{
 			Uid:     user.Uid,
-			Token:   CreateToken(user.Login, user.Addm, 2*time.Minute),
+			Token:   CreateToken(user.Login, user.Role, 2*time.Minute),
 			Expired: time.Now().Add(2 * time.Minute),
 		}
 
@@ -33,8 +31,8 @@ func UserRead(user entity.User) (http.Cookie, bool, bool) {
 			Value: token.Token,
 			Path:  "/",
 		}
-		return cookie, true, user.Addm
+		return cookie, user.Role
 	}
 
-	return http.Cookie{}, false, false
+	return http.Cookie{}, ""
 }

@@ -45,3 +45,7 @@ button {
 button:hover {
     background-color: #0056b3;
 }
+
+.action-buttons button {
+    margin-right: 10px; /* Отступ между кнопками */
+}
