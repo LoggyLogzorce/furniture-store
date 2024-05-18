@@ -44,7 +44,7 @@
             .then(data => {
                 // Перенаправляем пользователя в зависимости от полученной роли
                 if (data.role === "admin") {
-                    window.location.href = "/admin";
+                    window.location.href = "/admin/users";
                 }
                 if (data.role === "user") {
                     window.location.href = "/homepage";

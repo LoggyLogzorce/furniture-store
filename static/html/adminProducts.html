@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Data Display</title>
+    <link href="/css/admin.css" rel="stylesheet"> <!-- Подключаем CSS файл -->
+</head>
+<body>
+<nav>
+    <ul>
+        <li><a href="/admin/users/">Пользователи</a></li>
+        <li><a href="/admin/categories">Категории</a></li>
+        <li><a href="/admin/orders">Заказы</a></li>
+        <li><a href="/admin/reviews">Отзывы</a></li>
+    </ul>
+</nav>
+
+<div id="data-container">
+    <table id="data-table">
+        <thead>
+        <tr>
+            <th>id</th>
+            <th>Категория</th>
+            <th>Название</th>
+            <th>Цена</th>
+            <th>Описание</th>
+            <th>Actions</th> <!-- Добавляем столбец для действий -->
+        </tr>
+        </thead>
+        <tbody id="data-body"></tbody>
+    </table>
+</div>
+<!-- Добавляем кнопку "Обновить" -->
+<button onclick="fetchData()">Обновить данные</button>
+
+<script src="/js/adminProducts.js"></script> <!-- Подключаем JavaScript файл -->
+<script src="/js/displayData.js"></script>
+
+</body>
+</html>

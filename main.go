@@ -11,7 +11,9 @@ func main() {
 	m := http.NewServeMux()
 
 	m.HandleFunc("/", userHandle)
+	m.HandleFunc("/admin/", adminHandle)
 	m.HandleFunc("/ad/", updateHandle)
+	m.HandleFunc("/data/", GetDataHandle)
 
 	server := &http.Server{
 		Addr:         ":8080",

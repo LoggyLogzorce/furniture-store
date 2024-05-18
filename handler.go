@@ -83,22 +83,12 @@ func userHandle(w http.ResponseWriter, r *http.Request) {
 		if validToken {
 			switch role {
 			case "admin":
-				sendFileContent("./static/html/admin.html", ctx)
+				sendFileContent("./static/html/adminUsers.html", ctx)
 				return
 			case "user":
 				sendFileContent("./static/html/homePage.html", ctx)
 				return
 			}
-		}
-		sendFileContent("./static/html/index.html", ctx)
-		return
-	}
-
-	if pathArr[0] == "admin" {
-		validToken, role := validateTokenAndRole(ctx)
-		if validToken && role == "admin" {
-			sendFileContent("./static/html/admin.html", ctx)
-			return
 		}
 		sendFileContent("./static/html/index.html", ctx)
 		return
@@ -160,22 +150,6 @@ func userHandle(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		http.Error(w, "Unregistered", http.StatusConflict)
-		return
-	}
-
-	if pathArr[0] == "data_users" {
-		validToken, role := validateTokenAndRole(ctx)
-		if validToken && role == "admin" {
-			var users []entity.User
-			db.DB().Find(&users)
-			w.Header().Set("Content-Type", "application/json")
-			err := json.NewEncoder(w).Encode(users)
-			if err != nil {
-				log.Println(err)
-			}
-			return
-		}
-		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
 
@@ -268,6 +242,7 @@ func updateHandle(w http.ResponseWriter, r *http.Request) {
 			Password: updatedData["Password"],
 			Role:     updatedData["Additional Permission"],
 		}
+		fmt.Println(user)
 		db.DB().Save(&user)
 		return
 	}
@@ -286,6 +261,126 @@ func updateHandle(w http.ResponseWriter, r *http.Request) {
 		}
 		Uid := uint32(uintVal)
 		db.DB().Where("uid = ?", Uid).Delete(&user)
+		return
+	}
+}
+
+func GetDataHandle(w http.ResponseWriter, r *http.Request) {
+	ctx := engine.Context{
+		Response: w,
+		Request:  r,
+	}
+
+	url := r.URL
+	path := url.Path[1:]
+	pathArr := strings.Split(path, "/")
+
+	if pathArr[1] == "users" {
+		validToken, role := validateTokenAndRole(ctx)
+		if validToken && role == "admin" {
+			var users []entity.User
+			db.DB().Find(&users)
+			w.Header().Set("Content-Type", "application/json")
+			err := json.NewEncoder(w).Encode(users)
+			if err != nil {
+				log.Println(err)
+			}
+			return
+		}
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
+
+	if pathArr[1] == "orders" {
+		validToken, role := validateTokenAndRole(ctx)
+		if validToken && role == "admin" {
+			var orders []entity.Order
+			db.DB().Find(&orders)
+			w.Header().Set("Content-Type", "application/json")
+			err := json.NewEncoder(w).Encode(orders)
+			if err != nil {
+				log.Println(err)
+			}
+			return
+		}
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
+
+	if pathArr[1] == "products" {
+		validToken, role := validateTokenAndRole(ctx)
+		if validToken && role == "admin" {
+			var products []entity.Product
+			db.DB().Find(&products)
+			w.Header().Set("Content-Type", "application/json")
+			err := json.NewEncoder(w).Encode(products)
+			if err != nil {
+				log.Println(err)
+			}
+			return
+		}
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
+}
+
+func adminHandle(w http.ResponseWriter, r *http.Request) {
+	ctx := engine.Context{
+		Response: w,
+		Request:  r,
+	}
+
+	url := r.URL
+	path := url.Path[1:]
+	pathArr := strings.Split(path, "/")
+
+	if pathArr[1] == "users" {
+		validToken, role := validateTokenAndRole(ctx)
+		if validToken && role == "admin" {
+			sendFileContent("./static/html/adminUsers.html", ctx)
+			return
+		}
+		sendFileContent("./static/html/index.html", ctx)
+		return
+	}
+
+	if pathArr[1] == "products" {
+		validToken, role := validateTokenAndRole(ctx)
+		if validToken && role == "admin" {
+			sendFileContent("./static/html/adminProducts.html", ctx)
+			return
+		}
+		sendFileContent("./static/html/index.html", ctx)
+		return
+	}
+
+	if pathArr[1] == "categories" {
+		validToken, role := validateTokenAndRole(ctx)
+		if validToken && role == "admin" {
+			sendFileContent("./static/html/adminUsers.html", ctx)
+			return
+		}
+		sendFileContent("./static/html/index.html", ctx)
+		return
+	}
+
+	if pathArr[1] == "orders" {
+		validToken, role := validateTokenAndRole(ctx)
+		if validToken && role == "admin" {
+			sendFileContent("./static/html/adminUsers.html", ctx)
+			return
+		}
+		sendFileContent("./static/html/index.html", ctx)
+		return
+	}
+
+	if pathArr[1] == "reviews" {
+		validToken, role := validateTokenAndRole(ctx)
+		if validToken && role == "admin" {
+			sendFileContent("./static/html/adminUsers.html", ctx)
+			return
+		}
+		sendFileContent("./static/html/index.html", ctx)
 		return
 	}
 }
