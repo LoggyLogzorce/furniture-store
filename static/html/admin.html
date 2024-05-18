@@ -33,7 +33,7 @@
     }
 
     function fetchData() {
-        fetch('/data') // Отправляем GET запрос на сервер для получения данных
+        fetch('/data_users') // Отправляем GET запрос на сервер для получения данных
             .then(response => response.json())
             .then(data => {
                 displayData(data); // Отображаем полученные данные на странице
@@ -114,7 +114,7 @@
         });
 
         // Отправляем запрос DELETE на сервер с данными строки для удаления
-        fetch('/delete', {
+        fetch('/ad/delete', {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json'
@@ -142,7 +142,7 @@
         });
 
         // Отправляем запрос PUT на сервер с обновленными данными
-        fetch('/update', { // Используем переданный идентификатор
+        fetch('/ad/update', { // Используем переданный идентификатор
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'

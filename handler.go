@@ -79,7 +79,7 @@ func userHandle(w http.ResponseWriter, r *http.Request) {
 	pathArr := strings.Split(path, "/")
 
 	if pathArr[0] == "" {
-		validToken, role := homepage(ctx)
+		validToken, role := validateTokenAndRole(ctx)
 		if validToken {
 			switch role {
 			case "admin":
@@ -95,7 +95,7 @@ func userHandle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if pathArr[0] == "admin" {
-		validToken, role := homepage(ctx)
+		validToken, role := validateTokenAndRole(ctx)
 		if validToken && role == "admin" {
 			sendFileContent("./static/html/admin.html", ctx)
 			return
@@ -105,7 +105,7 @@ func userHandle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if pathArr[0] == "homepage" {
-		validToken, _ := homepage(ctx)
+		validToken, _ := validateTokenAndRole(ctx)
 		if validToken {
 			sendFileContent("./static/html/homePage.html", ctx)
 			return
@@ -163,14 +163,20 @@ func userHandle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if pathArr[0] == "data" {
-		var users []entity.User
-		db.DB().Find(&users)
-		w.Header().Set("Content-Type", "application/json")
-		err := json.NewEncoder(w).Encode(users)
-		if err != nil {
+	if pathArr[0] == "data_users" {
+		validToken, role := validateTokenAndRole(ctx)
+		if validToken && role == "admin" {
+			var users []entity.User
+			db.DB().Find(&users)
+			w.Header().Set("Content-Type", "application/json")
+			err := json.NewEncoder(w).Encode(users)
+			if err != nil {
+				log.Println(err)
+			}
 			return
 		}
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
 	}
 
 	_, ok := apiMap[r.Method]
@@ -205,7 +211,7 @@ func sendFileContent(filename string, ctx engine.Context) {
 	}
 }
 
-func homepage(ctx engine.Context) (bool, string) {
+func validateTokenAndRole(ctx engine.Context) (bool, string) {
 	cookie, err := ctx.Request.Cookie("token")
 	if err == nil {
 		// Проверка валидности токена
@@ -237,25 +243,49 @@ func updateHandle(w http.ResponseWriter, r *http.Request) {
 		Request:  r,
 	}
 
-	// Декодируем JSON данные из тела запроса
-	var updatedData map[string]string
-	if err := json.NewDecoder(ctx.Request.Body).Decode(&updatedData); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	url := r.URL
+	path := url.Path[1:]
+	pathArr := strings.Split(path, "/")
+	fmt.Println(pathArr[1])
+
+	if pathArr[1] == "update" {
+		// Декодируем JSON данные из тела запроса
+		var updatedData map[string]string
+		if err := json.NewDecoder(ctx.Request.Body).Decode(&updatedData); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		uintVal, err := strconv.ParseUint(updatedData["uid"], 10, 32)
+		if err != nil {
+			fmt.Println("Ошибка конвертации:", err)
+			return
+		}
+		Uid := uint32(uintVal)
+		user := entity.User{
+			Uid:      Uid,
+			Name:     updatedData["Name"],
+			Login:    updatedData["Login"],
+			Password: updatedData["Password"],
+			Role:     updatedData["Additional Permission"],
+		}
+		db.DB().Save(&user)
 		return
-	}
-	uintVal, err := strconv.ParseUint(updatedData["uid"], 10, 32)
-	if err != nil {
-		fmt.Println("Ошибка конвертации:", err)
-		return
-	}
-	Uid := uint32(uintVal)
-	user := entity.User{
-		Uid:      Uid,
-		Name:     updatedData["Name"],
-		Login:    updatedData["Login"],
-		Password: updatedData["Password"],
-		Role:     updatedData["Additional Permission"],
 	}
 
-	db.DB().Save(&user)
+	if pathArr[1] == "delete" {
+		var rowData map[string]string
+		if err := json.NewDecoder(r.Body).Decode(&rowData); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		var user entity.User
+		uintVal, err := strconv.ParseUint(rowData["uid"], 10, 32)
+		if err != nil {
+			fmt.Println("Ошибка конвертации:", err)
+			return
+		}
+		Uid := uint32(uintVal)
+		db.DB().Where("uid = ?", Uid).Delete(&user)
+		return
+	}
 }
