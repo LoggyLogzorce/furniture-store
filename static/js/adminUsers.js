@@ -14,29 +14,6 @@ function fetchData() {
         });
 }
 
-// Функция для редактирования строки
-function editRow(row) {
-    const tds = row.querySelectorAll('td');
-    tds.forEach(td => {
-        const currentValue = td.textContent;
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.value = currentValue; // Устанавливаем текущее значение ячейки в поле ввода
-        td.textContent = ''; // Очищаем содержимое ячейки
-        td.appendChild(input); // Добавляем поле ввода в ячейку
-    });
-
-    // Заменяем кнопку "Редактировать" на кнопку "Сохранить"
-    const saveButton = document.createElement('button');
-    saveButton.textContent = 'Сохранить';
-    saveButton.onclick = function () {
-        saveRow(row); // Передаем объект строки и идентификатор для сохранения
-    };
-    const tdActions = row.querySelector('td:last-child');
-    tdActions.textContent = ''; // Очищаем содержимое ячейки с кнопкой
-    tdActions.appendChild(saveButton); // Добавляем кнопку "Сохранить"
-}
-
 function deleteRow(row) {
     const rowData = {}; // Создаем объект с данными строки
     row.querySelectorAll('td').forEach((td, index) => {
@@ -45,7 +22,7 @@ function deleteRow(row) {
     });
 
     // Отправляем запрос DELETE на сервер с данными строки для удаления
-    fetch('/ad/delete', {
+    fetch('/ad/delete/user', {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json'
@@ -73,7 +50,7 @@ function saveRow(row) {
     });
 
     // Отправляем запрос PUT на сервер с обновленными данными
-    fetch('/ad/update', { // Используем переданный идентификатор
+    fetch('/ad/update/user', { // Используем переданный идентификатор
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json'

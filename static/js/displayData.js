@@ -36,3 +36,25 @@ function displayData(data) {
         tbody.appendChild(tr); // Добавляем строку в tbody
     });
 }
+
+function editRow(row) {
+    const tds = row.querySelectorAll('td');
+    tds.forEach(td => {
+        const currentValue = td.textContent;
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = currentValue; // Устанавливаем текущее значение ячейки в поле ввода
+        td.textContent = ''; // Очищаем содержимое ячейки
+        td.appendChild(input); // Добавляем поле ввода в ячейку
+    });
+
+    // Заменяем кнопку "Редактировать" на кнопку "Сохранить"
+    const saveButton = document.createElement('button');
+    saveButton.textContent = 'Сохранить';
+    saveButton.onclick = function () {
+        saveRow(row); // Передаем объект строки и идентификатор для сохранения
+    };
+    const tdActions = row.querySelector('td:last-child');
+    tdActions.textContent = ''; // Очищаем содержимое ячейки с кнопкой
+    tdActions.appendChild(saveButton); // Добавляем кнопку "Сохранить"
+}

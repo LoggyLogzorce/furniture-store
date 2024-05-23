@@ -12,7 +12,9 @@ func main() {
 
 	m.HandleFunc("/", userHandle)
 	m.HandleFunc("/admin/", adminHandle)
-	m.HandleFunc("/ad/", updateHandle)
+	m.HandleFunc("/ad/update/", updateHandle)
+	m.HandleFunc("/ad/delete/", deleteHandle)
+	m.HandleFunc("/ad/add/", addHandle)
 	m.HandleFunc("/data/", GetDataHandle)
 
 	server := &http.Server{

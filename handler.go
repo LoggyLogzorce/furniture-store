@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"furniture_store/api"
 	"furniture_store/config"
 	"furniture_store/db"
@@ -14,7 +13,6 @@ import (
 	"net/http"
 	"path/filepath"
 	"reflect"
-	"strconv"
 	"strings"
 )
 
@@ -217,50 +215,108 @@ func updateHandle(w http.ResponseWriter, r *http.Request) {
 		Request:  r,
 	}
 
-	url := r.URL
-	path := url.Path[1:]
-	pathArr := strings.Split(path, "/")
-	fmt.Println(pathArr[1])
-
-	if pathArr[1] == "update" {
-		// Декодируем JSON данные из тела запроса
-		var updatedData map[string]string
-		if err := json.NewDecoder(ctx.Request.Body).Decode(&updatedData); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		uintVal, err := strconv.ParseUint(updatedData["uid"], 10, 32)
-		if err != nil {
-			fmt.Println("Ошибка конвертации:", err)
-			return
-		}
-		Uid := uint32(uintVal)
-		user := entity.User{
-			Uid:      Uid,
-			Name:     updatedData["Name"],
-			Login:    updatedData["Login"],
-			Password: updatedData["Password"],
-			Role:     updatedData["Additional Permission"],
-		}
-		fmt.Println(user)
-		db.DB().Save(&user)
+	validToken, role := validateTokenAndRole(ctx)
+	if validToken && role != "admin" {
 		return
 	}
 
-	if pathArr[1] == "delete" {
-		var rowData map[string]string
-		if err := json.NewDecoder(r.Body).Decode(&rowData); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		var user entity.User
-		uintVal, err := strconv.ParseUint(rowData["uid"], 10, 32)
-		if err != nil {
-			fmt.Println("Ошибка конвертации:", err)
-			return
-		}
-		Uid := uint32(uintVal)
-		db.DB().Where("uid = ?", Uid).Delete(&user)
+	url := r.URL
+	path := url.Path[1:]
+	pathArr := strings.Split(path, "/")
+
+	// Декодируем JSON данные из тела запроса
+	var updatedData map[string]string
+	if err := json.NewDecoder(ctx.Request.Body).Decode(&updatedData); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if pathArr[2] == "user" {
+		api.UpdateUser(updatedData)
+		return
+	}
+
+	if pathArr[2] == "product" {
+		api.UpdateProduct(updatedData)
+		return
+	}
+
+	if pathArr[2] == "category" {
+		api.UpdateCategory(updatedData)
+		return
+	}
+
+	if pathArr[2] == "itemOrder" {
+		api.UpdateItemsOrder(updatedData)
+		return
+	}
+}
+
+func deleteHandle(w http.ResponseWriter, r *http.Request) {
+	ctx := engine.Context{
+		Response: w,
+		Request:  r,
+	}
+
+	validToken, role := validateTokenAndRole(ctx)
+	if validToken && role != "admin" {
+		return
+	}
+
+	url := r.URL
+	path := url.Path[1:]
+	pathArr := strings.Split(path, "/")
+
+	var rowData map[string]string
+	if err := json.NewDecoder(r.Body).Decode(&rowData); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if pathArr[2] == "user" {
+		api.DeleteUser(rowData)
+		return
+	}
+
+	if pathArr[2] == "product" {
+		api.DeleteProduct(rowData)
+		return
+	}
+
+	if pathArr[2] == "category" {
+		api.DeleteCategory(rowData)
+		return
+	}
+
+	if pathArr[2] == "itemOrder" {
+		api.DeleteItemsOrder(rowData)
+		return
+	}
+}
+
+func addHandle(w http.ResponseWriter, r *http.Request) {
+	ctx := engine.Context{
+		Response: w,
+		Request:  r,
+	}
+
+	validToken, role := validateTokenAndRole(ctx)
+	if validToken && role != "admin" {
+		return
+	}
+
+	url := r.URL
+	path := url.Path[1:]
+	pathArr := strings.Split(path, "/")
+
+	var rowData map[string]string
+	if err := json.NewDecoder(r.Body).Decode(&rowData); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if pathArr[2] == "product" {
+		api.AddProduct(rowData)
 		return
 	}
 }
@@ -291,13 +347,17 @@ func GetDataHandle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if pathArr[1] == "orders" {
+	if pathArr[1] == "itemsOrders" {
 		validToken, role := validateTokenAndRole(ctx)
 		if validToken && role == "admin" {
-			var orders []entity.Order
-			db.DB().Find(&orders)
+			var itemsOrderProducts []entity.ItemOrderProduct
+			db.DB().Table("items_order").
+				Select("items_order.id, items_order.order_id, product.id as product_id, product.name AS product_name, items_order.quantity, product.price").
+				Joins("JOIN product ON items_order.product = product.id").
+				Scan(&itemsOrderProducts)
+
 			w.Header().Set("Content-Type", "application/json")
-			err := json.NewEncoder(w).Encode(orders)
+			err := json.NewEncoder(w).Encode(itemsOrderProducts)
 			if err != nil {
 				log.Println(err)
 			}
@@ -314,6 +374,38 @@ func GetDataHandle(w http.ResponseWriter, r *http.Request) {
 			db.DB().Find(&products)
 			w.Header().Set("Content-Type", "application/json")
 			err := json.NewEncoder(w).Encode(products)
+			if err != nil {
+				log.Println(err)
+			}
+			return
+		}
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
+
+	if pathArr[1] == "categories" {
+		validToken, role := validateTokenAndRole(ctx)
+		if validToken && role == "admin" {
+			var category []entity.Category
+			db.DB().Find(&category)
+			w.Header().Set("Content-Type", "application/json")
+			err := json.NewEncoder(w).Encode(category)
+			if err != nil {
+				log.Println(err)
+			}
+			return
+		}
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
+
+	if pathArr[1] == "reviews" {
+		validToken, role := validateTokenAndRole(ctx)
+		if validToken && role == "admin" {
+			var review []entity.Review
+			db.DB().Find(&review)
+			w.Header().Set("Content-Type", "application/json")
+			err := json.NewEncoder(w).Encode(review)
 			if err != nil {
 				log.Println(err)
 			}
@@ -357,17 +449,17 @@ func adminHandle(w http.ResponseWriter, r *http.Request) {
 	if pathArr[1] == "categories" {
 		validToken, role := validateTokenAndRole(ctx)
 		if validToken && role == "admin" {
-			sendFileContent("./static/html/adminUsers.html", ctx)
+			sendFileContent("./static/html/adminCategory.html", ctx)
 			return
 		}
 		sendFileContent("./static/html/index.html", ctx)
 		return
 	}
 
-	if pathArr[1] == "orders" {
+	if pathArr[1] == "itemsOrders" {
 		validToken, role := validateTokenAndRole(ctx)
 		if validToken && role == "admin" {
-			sendFileContent("./static/html/adminUsers.html", ctx)
+			sendFileContent("./static/html/adminItemsOrders.html", ctx)
 			return
 		}
 		sendFileContent("./static/html/index.html", ctx)
@@ -377,10 +469,21 @@ func adminHandle(w http.ResponseWriter, r *http.Request) {
 	if pathArr[1] == "reviews" {
 		validToken, role := validateTokenAndRole(ctx)
 		if validToken && role == "admin" {
-			sendFileContent("./static/html/adminUsers.html", ctx)
+			sendFileContent("./static/html/adminReviews.html", ctx)
 			return
 		}
 		sendFileContent("./static/html/index.html", ctx)
+		return
+	}
+
+	_, ok := apiMap[r.Method]
+	if !ok {
+		http.Error(w, "No such method", http.StatusNotFound)
+		return
+	}
+
+	if staticUrl, ok := static(path); ok {
+		sendFileContent("./static/"+staticUrl, ctx)
 		return
 	}
 }

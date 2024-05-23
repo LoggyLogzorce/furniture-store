@@ -2,34 +2,33 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <title>Data Display</title>
-    <link rel="stylesheet" href="/css/admin.css"> <!-- Подключаем CSS файл -->
+    <link href="/css/admin.css" rel="stylesheet"> <!-- Подключаем CSS файл -->
 </head>
 <body>
 <nav>
     <ul>
-        <li><a href="/admin/products/">Товары</a></li>
+        <li><a href="/admin/users">Пользователи</a></li>
+        <li><a href="/admin/products">Товары</a></li>
         <li><a href="/admin/categories">Категории</a></li>
-        <li><a href="/admin/itemsOrders">Заказы</a></li>
         <li><a href="/admin/reviews">Отзывы</a></li>
     </ul>
 </nav>
-
 <div id="header">
-    <nav>Пользователи</nav>
+    <nav>Позиции заказов</nav>
 </div>
-
 
 <div id="data-container">
     <table id="data-table">
         <thead>
         <tr>
-            <th>uid</th>
-            <th>Имя</th>
-            <th>Логин</th>
-            <th>Пароль</th>
-            <th>Роль</th>
+            <th>id</th>
+            <th>Номер заказа</th>
+            <th>Номер товара</th>
+            <th>Товар</th>
+            <th>Количество</th>
+            <th>Цена</th>
             <th>Actions</th> <!-- Добавляем столбец для действий -->
         </tr>
         </thead>
@@ -39,7 +38,7 @@
 <!-- Добавляем кнопку "Обновить" -->
 <button onclick="fetchData()">Обновить данные</button>
 
-<script src="/js/adminUsers.js"></script> <!-- Подключаем JavaScript файл -->
+<script src="/js/adminItemsOrders.js"></script> <!-- Подключаем JavaScript файл -->
 <script src="/js/displayData.js"></script>
 
 </body>

@@ -8,7 +8,6 @@ import (
 type Order struct {
 	Id         uint32    `json:"id" gorm:"primary_key"`
 	UserID     uint      `json:"user_id"`
-	Products   uint      `json:"products"`
 	TotalPrice float64   `json:"total_price"`
 	Status     string    `json:"status"`
 	Time       time.Time `json:"time"`

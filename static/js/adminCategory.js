@@ -4,7 +4,7 @@ window.onload = function () {
 }
 
 function fetchData() {
-    fetch('/data/products') // Отправляем GET запрос на сервер для получения данных
+    fetch('/data/categories') // Отправляем GET запрос на сервер для получения данных
         .then(response => response.json())
         .then(data => {
             displayData(data); // Отображаем полученные данные на странице
@@ -22,7 +22,7 @@ function deleteRow(row) {
     });
 
     // Отправляем запрос DELETE на сервер с данными строки для удаления
-    fetch('/ad/delete/product', {
+    fetch('/ad/delete/category', {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json'
@@ -50,7 +50,7 @@ function saveRow(row) {
     });
 
     // Отправляем запрос PUT на сервер с обновленными данными
-    fetch('/ad/update/product', { // Используем переданный идентификатор
+    fetch('/ad/update/category', { // Используем переданный идентификатор
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json'
@@ -90,29 +90,5 @@ function saveRow(row) {
             const tdActions = row.querySelector('.action-buttons');
             tdActions.textContent = ''; // Очищаем содержимое ячейки с кнопкой
             tdActions.appendChild(editButton); // Добавляем кнопку "Редактировать"
-        });
-}
-
-function addRow() {
-    const category = document.getElementById('category').value;
-    const name = document.getElementById('name').value;
-    const price = document.getElementById('price').value;
-    const description = document.getElementById('description').value;
-
-    // Отправляем запрос POST на сервер для добавления записи
-    fetch('/ad/add/product', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({category, name, price, description})
-    })
-        .then(response => response.json())
-        .then(data => {
-            console.log('Row added:', data);
-            fetchData(); // Обновляем данные после добавления
-        })
-        .catch(error => {
-            console.error('Error adding row:', error);
         });
 }
