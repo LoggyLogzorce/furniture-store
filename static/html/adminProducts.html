@@ -5,11 +5,14 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <title>Data Display</title>
     <link href="/css/admin.css" rel="stylesheet"> <!-- Подключаем CSS файл -->
+    <link href="/css/products.css" rel="stylesheet">
 </head>
 <body>
 <nav>
     <ul>
+        <li><a href="/homepage">Главная страница</a></li>
         <li><a href="/admin/users/">Пользователи</a></li>
+        <li><a href="/admin/products/">Товары</a></li>
         <li><a href="/admin/categories">Категории</a></li>
         <li><a href="/admin/itemsOrders">Заказы</a></li>
         <li><a href="/admin/reviews">Отзывы</a></li>
@@ -29,6 +32,7 @@
             <th>Название</th>
             <th>Цена</th>
             <th>Описание</th>
+            <th>Изображение</th>
             <th>Actions</th> <!-- Добавляем столбец для действий -->
         </tr>
         </thead>
@@ -45,6 +49,7 @@
     <input id="name" placeholder="Название" type="text">
     <input id="price" placeholder="Цена" type="text">
     <input id="description" placeholder="Описание" type="text">
+    <input id="image" placeholder="Изображение" type="text">
     <br>
     <button onclick="addRow()">Добавить запись</button>
 </div>

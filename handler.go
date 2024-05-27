@@ -2,8 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"furniture_store/api"
-	"furniture_store/config"
 	"furniture_store/db"
 	"furniture_store/engine"
 	"furniture_store/entity"
@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"reflect"
+	"strconv"
 	"strings"
 )
 
@@ -23,18 +24,14 @@ type Info struct {
 }
 
 var types map[string]bool
-var hdl *api.Handler
 var apiMap map[string]map[string]Info
-var accessExceptions []string
 
 func init() {
-	cfg := config.Get()
 	apiMap = make(map[string]map[string]Info)
 	apiMap["POST"] = make(map[string]Info)
 	apiMap["PUT"] = make(map[string]Info)
 	apiMap["DELETE"] = make(map[string]Info)
 	apiMap["GET"] = make(map[string]Info)
-	maps := cfg.Api
 
 	types = make(map[string]bool)
 	types[".png"] = true
@@ -42,28 +39,6 @@ func init() {
 	types[".js"] = true
 	types[".svg"] = true
 	types[".css"] = true
-
-	hdl = &api.Handler{}
-	services := reflect.ValueOf(hdl)
-	_struct := reflect.TypeOf(hdl)
-
-	for methodNum := 0; methodNum < _struct.NumMethod(); methodNum++ {
-		method := _struct.Method(methodNum)
-		val, ok := maps[method.Name]
-		if !ok {
-			continue
-		}
-		if _, ok := apiMap[val.Method]; !ok {
-
-		}
-		apiMap[val.Method][val.Url] = Info{
-			Name:   method.Name,
-			Access: "",
-			Link:   services.Method(methodNum),
-		}
-	}
-
-	accessExceptions = cfg.List
 }
 
 func userHandle(w http.ResponseWriter, r *http.Request) {
@@ -102,6 +77,26 @@ func userHandle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if pathArr[0] == "order" {
+		validToken, _ := validateTokenAndRole(ctx)
+		if validToken {
+			sendFileContent("./static/html/order.html", ctx)
+			return
+		}
+		sendFileContent("./static/html/index.html", ctx)
+		return
+	}
+
+	if pathArr[0] == "personal_account" {
+		validToken, _ := validateTokenAndRole(ctx)
+		if validToken {
+			sendFileContent("./static/html/personal_account.html", ctx)
+			return
+		}
+		sendFileContent("./static/html/index.html", ctx)
+		return
+	}
+
 	if pathArr[0] == "register" {
 		sendFileContent("./static/html/register.html", ctx)
 		return
@@ -114,7 +109,6 @@ func userHandle(w http.ResponseWriter, r *http.Request) {
 
 		cookie, role := api.UserRead(user)
 
-		// Возвращаем роль пользователя в формате JSON
 		response := struct {
 			Role string `json:"role"`
 		}{
@@ -123,7 +117,6 @@ func userHandle(w http.ResponseWriter, r *http.Request) {
 
 		ctx.Response.Header().Set("Content-Type", "application/json")
 		if cookie.Value != "" {
-			// Если аутентификация прошла успешно, отправляем роль пользователя
 			http.SetCookie(ctx.Response, &cookie)
 			ctx.Response.WriteHeader(http.StatusOK)
 			err := json.NewEncoder(ctx.Response).Encode(response)
@@ -142,8 +135,8 @@ func userHandle(w http.ResponseWriter, r *http.Request) {
 		user.Password = r.FormValue("password")
 		user.Role = "user"
 
-		err := api.CreateUser(user)
-		if err == true {
+		created := api.CreateUser(user)
+		if created == true {
 			http.Redirect(ctx.Response, ctx.Request, "/", http.StatusOK)
 			return
 		}
@@ -292,6 +285,11 @@ func deleteHandle(w http.ResponseWriter, r *http.Request) {
 		api.DeleteItemsOrder(rowData)
 		return
 	}
+
+	if pathArr[2] == "review" {
+		api.DeleteReview(rowData)
+		return
+	}
 }
 
 func addHandle(w http.ResponseWriter, r *http.Request) {
@@ -319,9 +317,14 @@ func addHandle(w http.ResponseWriter, r *http.Request) {
 		api.AddProduct(rowData)
 		return
 	}
+
+	if pathArr[2] == "category" {
+		api.AddCategory(rowData)
+		return
+	}
 }
 
-func GetDataHandle(w http.ResponseWriter, r *http.Request) {
+func getDataHandle(w http.ResponseWriter, r *http.Request) {
 	ctx := engine.Context{
 		Response: w,
 		Request:  r,
@@ -330,6 +333,25 @@ func GetDataHandle(w http.ResponseWriter, r *http.Request) {
 	url := r.URL
 	path := url.Path[1:]
 	pathArr := strings.Split(path, "/")
+
+	if pathArr[1] == "order" {
+		cookie, err := ctx.Request.Cookie("token")
+		login, err := api.GetLoginFromToken(cookie.Value)
+		var orderItem []entity.OrderItem
+		db.DB().Table("product").
+			Select("product.name as product_name, product.price as price, items_order.quantity as quantity").
+			Joins("JOIN items_order ON product.id = items_order.product").
+			Joins("JOIN \"order\" ON items_order.order_id = \"order\".id").
+			Joins("JOIN \"user\" ON \"order\".user_id = \"user\".uid").
+			Where("\"user\".login = ?", login).Scan(&orderItem)
+
+		w.Header().Set("Content-Type", "application/json")
+		err = json.NewEncoder(w).Encode(orderItem)
+		if err != nil {
+			log.Println(err)
+		}
+		return
+	}
 
 	if pathArr[1] == "users" {
 		validToken, role := validateTokenAndRole(ctx)
@@ -368,18 +390,41 @@ func GetDataHandle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if pathArr[1] == "products" {
-		validToken, role := validateTokenAndRole(ctx)
-		if validToken && role == "admin" {
-			var products []entity.Product
-			db.DB().Find(&products)
+		var products []entity.Product
+		db.DB().Find(&products)
+		categoryStr := r.URL.Query().Get("category")
+
+		// Логируем значение параметра для отладки
+		fmt.Printf("Запрошенная категория: %q\n", categoryStr)
+
+		if categoryStr == "" {
+			// Если категория не указана, возвращаем все товары
 			w.Header().Set("Content-Type", "application/json")
-			err := json.NewEncoder(w).Encode(products)
-			if err != nil {
-				log.Println(err)
-			}
+			json.NewEncoder(w).Encode(products)
 			return
 		}
-		http.Error(w, "Forbidden", http.StatusForbidden)
+
+		// Преобразуем строку в uint8
+		category, err := strconv.ParseUint(categoryStr, 10, 8)
+		if err != nil {
+			http.Error(w, "Invalid category", http.StatusBadRequest)
+			return
+		}
+
+		fmt.Printf("Преобразованная категория: %d\n", category)
+		category32 := uint32(category)
+
+		var filteredProducts []entity.Product
+		for _, product := range products {
+			if product.Category == category32 {
+				filteredProducts = append(filteredProducts, product)
+			}
+		}
+
+		fmt.Printf("Отфильтрованные товары: %+v\n", filteredProducts)
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(filteredProducts)
 		return
 	}
 

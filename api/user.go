@@ -25,7 +25,7 @@ func UserRead(user entity.User) (http.Cookie, string) {
 		token := entity.Token{
 			Uid:     user.Uid,
 			Token:   CreateToken(user.Login, user.Role, 2*time.Minute),
-			Expired: time.Now().Add(2 * time.Minute),
+			Expired: time.Now().Add(20 * time.Minute),
 		}
 
 		cookie := http.Cookie{

@@ -13,6 +13,12 @@ type Order struct {
 	Time       time.Time `json:"time"`
 }
 
+type OrderItem struct {
+	ProductName string `json:"product_name"`
+	Quantity    uint8  `json:"quantity"`
+	Price       string `json:"price"`
+}
+
 func (_ Order) TableName() string {
 	return "order"
 }

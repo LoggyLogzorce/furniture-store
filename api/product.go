@@ -21,7 +21,7 @@ func UpdateProduct(updatedData map[string]string) {
 	}
 
 	Id := uint32(uintId)
-	Category := uint(uintCategory)
+	Category := uint32(uintCategory)
 
 	product := entity.Product{
 		Id:          Id,
@@ -29,6 +29,7 @@ func UpdateProduct(updatedData map[string]string) {
 		Name:        updatedData["Название"],
 		Price:       updatedData["Цена"],
 		Description: updatedData["Описание"],
+		Image:       updatedData["Изображение"],
 	}
 	db.DB().Save(&product)
 }
@@ -51,9 +52,10 @@ func AddProduct(rowData map[string]string) {
 		return
 	}
 	var product entity.Product
-	product.Category = uint(uintCategory)
+	product.Category = uint32(uintCategory)
 	product.Name = rowData["name"]
 	product.Price = rowData["price"]
 	product.Description = rowData["description"]
+	product.Image = rowData["image"]
 	db.DB().Create(&product)
 }

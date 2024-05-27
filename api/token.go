@@ -10,10 +10,10 @@ import (
 var secretKey = []byte("secret_key")
 
 // CreateToken Создать JWT токен с использованием секретного ключа
-func CreateToken(username string, role string, expirationTime time.Duration) string {
+func CreateToken(login string, role string, expirationTime time.Duration) string {
 	// Создать структуру для хранения данных в токене
 	claims := jwt.MapClaims{
-		"login": username,
+		"login": login,
 		"role":  role,
 		"exp":   time.Now().Add(expirationTime).Unix(),
 	}
@@ -32,13 +32,7 @@ func CreateToken(username string, role string, expirationTime time.Duration) str
 
 func IsValidateToken(tokenString string) bool {
 	// Парсинг токена
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		// Проверка метода подписи
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
-		}
-		return secretKey, nil
-	})
+	token, err := ParseToken(tokenString)
 	if err != nil {
 		return false // Ошибка парсинга токена
 	}
@@ -64,10 +58,7 @@ func IsValidateToken(tokenString string) bool {
 
 func GetRoleFromToken(tokenString string) (string, error) {
 	// Парсинг JWT токена
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		// В этой функции необходимо вернуть секретный ключ, используемый для подписи токена
-		return secretKey, nil
-	})
+	token, err := ParseToken(tokenString)
 
 	// Проверка на ошибку при парсинге токена
 	if err != nil {
@@ -84,4 +75,30 @@ func GetRoleFromToken(tokenString string) (string, error) {
 
 	// Если роль не найдена в токене, возвращаем ошибку
 	return "", errors.New("role not found in token")
+}
+
+func ParseToken(tokenString string) (*jwt.Token, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return secretKey, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return token, nil
+}
+
+func GetLoginFromToken(tokenString string) (string, error) {
+	token, err := ParseToken(tokenString)
+	if err != nil {
+		return "", err
+	}
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		if login, exists := claims["login"].(string); exists {
+			return login, nil
+		}
+	}
+	return "", errors.New("login not found in token")
 }

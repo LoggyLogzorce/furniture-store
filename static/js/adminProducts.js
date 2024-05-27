@@ -98,6 +98,7 @@ function addRow() {
     const name = document.getElementById('name').value;
     const price = document.getElementById('price').value;
     const description = document.getElementById('description').value;
+    const image = document.getElementById('image').value;
 
     // Отправляем запрос POST на сервер для добавления записи
     fetch('/ad/add/product', {
@@ -105,7 +106,7 @@ function addRow() {
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({category, name, price, description})
+        body: JSON.stringify({category, name, price, description, image})
     })
         .then(response => response.json())
         .then(data => {
@@ -115,4 +116,11 @@ function addRow() {
         .catch(error => {
             console.error('Error adding row:', error);
         });
+
+    // Очищаем форму добавления
+    document.getElementById('category').value = '';
+    document.getElementById('name').value = '';
+    document.getElementById('price').value = '';
+    document.getElementById('description').value = '';
+    fetchData();
 }

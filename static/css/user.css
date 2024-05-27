@@ -1,0 +1,19 @@
+#data-table th:nth-child(1),
+#data-table td:nth-child(1) {
+    width: 80px; /* Уменьшаем ширину первых двух столбцов */
+    min-width: 60px; /* Задаем минимальную ширину */
+    max-width: 100px; /* Задаем максимальную ширину */
+}
+
+#data-table th:nth-child(2),
+#data-table td:nth-child(2),
+#data-table th:nth-child(3),
+#data-table td:nth-child(3),
+#data-table th:nth-child(4),
+#data-table td:nth-child(4),
+#data-table th:nth-child(5),
+#data-table td:nth-child(5) {
+    width: 250px; /* Уменьшаем ширину первых двух столбцов */
+    min-width: 60px; /* Задаем минимальную ширину */
+    max-width: 250px; /* Задаем максимальную ширину */
+}

@@ -92,3 +92,24 @@ function saveRow(row) {
             tdActions.appendChild(editButton); // Добавляем кнопку "Редактировать"
         });
 }
+
+function addRow() {
+    const category = document.getElementById('category').value;
+
+    // Отправляем запрос POST на сервер для добавления записи
+    fetch('/ad/add/category', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({category})
+    })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Row added:', data);
+            fetchData(); // Обновляем данные после добавления
+        })
+        .catch(error => {
+            console.error('Error adding row:', error);
+        });
+}

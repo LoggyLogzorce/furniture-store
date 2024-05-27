@@ -81,3 +81,60 @@ nav ul li a:hover {
 #header {
     text-align: center;
 }
+
+#data-table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+#data-table th,
+#data-table td {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+    overflow: hidden; /* добавляем стиль для предотвращения выхода содержимого за границы */
+    white-space: nowrap; /* предотвращаем перенос текста на новую строку */
+    text-overflow: ellipsis; /* добавляем многоточие (...) для обрезанных строк */
+}
+
+#data-table th {
+    background-color: #f2f2f2;
+}
+
+#data-table th:first-child,
+#data-table td:first-child {
+    border-left: none; /* убираем левую границу для первого столбца */
+}
+
+#data-table th:last-child,
+#data-table td:last-child {
+    border-right: none; /* убираем правую границу для последнего столбца */
+}
+
+#data-table th,
+#data-table td {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+    overflow: hidden;
+    word-wrap: break-word; /* добавляем свойство для разрыва слов */
+}
+
+#data-container {
+    overflow-x: auto; /* Горизонтальный скролл при необходимости */
+    max-width: 100%; /* Максимальная ширина контейнера */
+}
+
+#data-table {
+    width: 100%; /* Ширина таблицы 100% от родительского контейнера */
+    table-layout: fixed; /* Фиксированная ширина столбцов */
+}
+
+#data-table th,
+#data-table td {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 12px; /* Добавляем большие отступы */
+    overflow: hidden;
+    word-wrap: break-word; /* Разрыв слов */
+}

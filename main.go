@@ -15,7 +15,7 @@ func main() {
 	m.HandleFunc("/ad/update/", updateHandle)
 	m.HandleFunc("/ad/delete/", deleteHandle)
 	m.HandleFunc("/ad/add/", addHandle)
-	m.HandleFunc("/data/", GetDataHandle)
+	m.HandleFunc("/data/", getDataHandle)
 
 	server := &http.Server{
 		Addr:         ":8080",

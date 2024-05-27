@@ -33,3 +33,10 @@ func DeleteCategory(rowData map[string]string) {
 	Id := uint32(uintId)
 	db.DB().Where("id = ?", Id).Delete(&category)
 }
+
+func AddCategory(rowData map[string]string) {
+	category := entity.Category{
+		Name: rowData["category"],
+	}
+	db.DB().Create(&category)
+}

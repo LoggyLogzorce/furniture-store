@@ -6,10 +6,11 @@ import (
 
 type Product struct {
 	Id          uint32 `json:"id" gorm:"primaryKey"`
-	Category    uint   `json:"category"`
+	Category    uint32 `json:"category"`
 	Name        string `json:"name"`
 	Price       string `json:"price"`
 	Description string `json:"description"`
+	Image       string `json:"image"`
 }
 
 func (_ Product) TableName() string {

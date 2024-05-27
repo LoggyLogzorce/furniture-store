@@ -9,8 +9,10 @@
 <body>
 <nav>
     <ul>
-        <li><a href="/admin/users">Пользователи</a></li>
-        <li><a href="/admin/products">Товары</a></li>
+        <li><a href="/homepage">Главная страница</a></li>
+        <li><a href="/admin/users/">Пользователи</a></li>
+        <li><a href="/admin/products/">Товары</a></li>
+        <li><a href="/admin/categories">Категории</a></li>
         <li><a href="/admin/itemsOrders">Заказы</a></li>
         <li><a href="/admin/reviews">Отзывы</a></li>
     </ul>
@@ -33,6 +35,13 @@
 </div>
 <!-- Добавляем кнопку "Обновить" -->
 <button onclick="fetchData()">Обновить данные</button>
+<br><br>
+
+<div id="add-form">
+    <input id="category" placeholder="Категория" type="text">
+    <br>
+    <button onclick="addRow()">Добавить категорию</button>
+</div>
 
 <script src="/js/adminCategory.js"></script> <!-- Подключаем JavaScript файл -->
 <script src="/js/displayData.js"></script>
