@@ -251,11 +251,6 @@ func deleteHandle(w http.ResponseWriter, r *http.Request) {
 		Request:  r,
 	}
 
-	validToken, role := validateTokenAndRole(ctx)
-	if validToken && role != "admin" {
-		return
-	}
-
 	url := r.URL
 	path := url.Path[1:]
 	pathArr := strings.Split(path, "/")
@@ -263,6 +258,38 @@ func deleteHandle(w http.ResponseWriter, r *http.Request) {
 	var rowData map[string]string
 	if err := json.NewDecoder(r.Body).Decode(&rowData); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if pathArr[2] == "item" {
+		fmt.Println(rowData)
+		cookie, err := ctx.Request.Cookie("token")
+		if err != nil {
+			log.Println(err)
+		}
+
+		token := cookie.Value
+		api.DeleteItemsOrder(rowData, token)
+		response := struct {
+			Success bool `json:"success"`
+		}{
+			Success: true,
+		}
+		w.Header().Set("Content-Type", "application/json")
+		err = json.NewEncoder(w).Encode(response)
+		if err != nil {
+			log.Println(err)
+		}
+		return
+	}
+
+	validToken, role := validateTokenAndRole(ctx)
+	if validToken && role != "admin" {
+		return
+	}
+
+	if pathArr[2] == "review" {
+		api.DeleteReview(rowData)
 		return
 	}
 
@@ -280,27 +307,12 @@ func deleteHandle(w http.ResponseWriter, r *http.Request) {
 		api.DeleteCategory(rowData)
 		return
 	}
-
-	if pathArr[2] == "itemOrder" {
-		api.DeleteItemsOrder(rowData)
-		return
-	}
-
-	if pathArr[2] == "review" {
-		api.DeleteReview(rowData)
-		return
-	}
 }
 
 func addHandle(w http.ResponseWriter, r *http.Request) {
 	ctx := engine.Context{
 		Response: w,
 		Request:  r,
-	}
-
-	validToken, role := validateTokenAndRole(ctx)
-	if validToken && role != "admin" {
-		return
 	}
 
 	url := r.URL
@@ -310,6 +322,32 @@ func addHandle(w http.ResponseWriter, r *http.Request) {
 	var rowData map[string]string
 	if err := json.NewDecoder(r.Body).Decode(&rowData); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if pathArr[2] == "cart" {
+		cookie, err := ctx.Request.Cookie("token")
+		if err != nil {
+			log.Println(err)
+		}
+
+		token := cookie.Value
+		api.AddCart(rowData, token)
+		response := struct {
+			Success bool `json:"success"`
+		}{
+			Success: true,
+		}
+		w.Header().Set("Content-Type", "application/json")
+		err = json.NewEncoder(w).Encode(response)
+		if err != nil {
+			log.Println(err)
+		}
+		return
+	}
+
+	validToken, role := validateTokenAndRole(ctx)
+	if validToken && role != "admin" {
 		return
 	}
 
@@ -339,7 +377,7 @@ func getDataHandle(w http.ResponseWriter, r *http.Request) {
 		login, err := api.GetLoginFromToken(cookie.Value)
 		var orderItem []entity.OrderItem
 		db.DB().Table("product").
-			Select("product.name as product_name, product.price as price, items_order.quantity as quantity").
+			Select("product.id as id, product.name as product_name, product.price as price, items_order.quantity as quantity").
 			Joins("JOIN items_order ON product.id = items_order.product").
 			Joins("JOIN \"order\" ON items_order.order_id = \"order\".id").
 			Joins("JOIN \"user\" ON \"order\".user_id = \"user\".uid").

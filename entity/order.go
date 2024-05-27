@@ -2,18 +2,16 @@ package entity
 
 import (
 	"furniture_store/db"
-	"time"
 )
 
 type Order struct {
-	Id         uint32    `json:"id" gorm:"primary_key"`
-	UserID     uint      `json:"user_id"`
-	TotalPrice float64   `json:"total_price"`
-	Status     string    `json:"status"`
-	Time       time.Time `json:"time"`
+	Id     uint32 `json:"id" gorm:"primary_key"`
+	UserID uint   `json:"user_id"`
+	Status string `json:"status"`
 }
 
 type OrderItem struct {
+	Id          string `json:"id"`
 	ProductName string `json:"product_name"`
 	Quantity    uint8  `json:"quantity"`
 	Price       string `json:"price"`

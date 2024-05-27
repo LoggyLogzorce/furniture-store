@@ -168,7 +168,7 @@
                   <p class="card-text">${product.description}</p>
                   <div class="d-flex justify-content-between align-items-center">
                     <div class="btn-group">
-                      <button type="button" class="btn btn-sm btn-outline-secondary">В корзину</button>
+                      <button type="button" class="btn btn-sm btn-outline-secondary add-to-cart-btn" data-product-id="${product.id}">В корзину</button>
                     </div>
                     <small class="text-muted">${product.price} руб.</small>
                   </div>
@@ -178,8 +178,37 @@
           `;
                 productsContainer.insertAdjacentHTML('beforeend', card);
               });
+
+              // Добавляем обработчик событий для кнопок "В корзину"
+              document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+                button.addEventListener('click', function () {
+                  const productId = this.getAttribute('data-product-id');
+                  addToCart(productId);
+                });
+              });
             })
             .catch(error => console.error('Ошибка при получении данных о товарах:', error));
+  }
+
+  function addToCart(productId) {
+    const url = '/ad/add/cart';
+
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({productId})
+    })
+            .then(response => response.json())
+            .then(result => {
+              if (result.success) {
+                alert('Товар добавлен в корзину!');
+              } else {
+                alert('Ошибка при добавлении товара в корзину.');
+              }
+            })
+            .catch(error => console.error('Ошибка при добавлении товара в корзину:', error));
   }
 
   // При загрузке страницы отображаем все товары
@@ -193,6 +222,8 @@
     deleteCookie('token');
     window.location.href = '/';
   });
+
+
 </script>
 
 <script src="/docs/5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>

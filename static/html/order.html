@@ -97,6 +97,7 @@
             <th>Товар</th>
             <th>Цена</th>
             <th>Количество</th>
+            <th>Действие</th>
         </tr>
         </thead>
         <tbody>
@@ -121,19 +122,44 @@
         }
     }
 
+    // Функция для удаления товара из корзины
+    async function removeItem(productId) {
+        console.log(productId)
+        try {
+            const response = await fetch('/ad/delete/item', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({id: `${productId}`})
+            });
+            const result = await response.json();
+            if (result.success) {
+                alert('Товар удален из корзины');
+                await renderCart(); // Перезагрузка корзины после удаления
+            } else {
+                alert('Ошибка при удалении товара: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Ошибка при удалении товара:', error);
+        }
+    }
+
     async function renderCart() {
         const orderItems = await fetchOrderItems();
         const tbody = document.querySelector('tbody');
         const totalAmountElement = document.getElementById('totalAmount');
+        tbody.innerHTML = '';  // Очистка таблицы перед добавлением новых данных
         let totalAmount = 0;
 
         orderItems.forEach(item => {
             const row = document.createElement('tr');
             row.innerHTML = `
-                    <td>${item.product_name}</td>
-                    <td>${item.price} руб.</td>
-                    <td>${item.quantity}</td>
-                `;
+                <td>${item.product_name}</td>
+            <td>${item.price} руб.</td>
+            <td>${item.quantity}</td>
+            <td><button onclick="removeItem(${item.id})">Удалить</button></td>`
+            ;
             tbody.appendChild(row);
             totalAmount += item.price * item.quantity;
         });

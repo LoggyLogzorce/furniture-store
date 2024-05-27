@@ -37,6 +37,7 @@ function deleteRow(row) {
         .catch(error => {
             console.error('Error deleting row:', error);
         });
+    fetchData();
 }
 
 // Функция для сохранения изменений строки
@@ -91,6 +92,7 @@ function saveRow(row) {
             tdActions.textContent = ''; // Очищаем содержимое ячейки с кнопкой
             tdActions.appendChild(editButton); // Добавляем кнопку "Редактировать"
         });
+    fetchData();
 }
 
 function addRow() {
@@ -122,5 +124,6 @@ function addRow() {
     document.getElementById('name').value = '';
     document.getElementById('price').value = '';
     document.getElementById('description').value = '';
+    document.getElementById('image').value = '';
     fetchData();
 }
