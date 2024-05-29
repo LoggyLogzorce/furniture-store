@@ -42,20 +42,19 @@
             return;
         }
 
-        var formData = new FormData();
-        formData.append("username", username);
-        formData.append("login", login);
-        formData.append("password", password);
-
-        fetch("/logout", {
+        fetch("/register", {
             method: "POST",
-            body: formData
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({username, login, password})
         })
             .then(response => {
                 if (!response.ok) {
                     throw new Error("Authentication failed");
                 }
                 // Если ответ от сервера успешен, перенаправить пользователя на другую страницу
+                deleteCookie()
                 window.location.href = "/"; // Перенаправление на другую страницу
             })
             .catch(error => {
@@ -64,6 +63,10 @@
                 alert("Registration failed. Пользователь с таким логином уже существует.");
             });
     });
+
+    function deleteCookie() {
+        document.cookie = 'token' + '=; Max-Age=-99999999;';
+    }
 
 </script>
 

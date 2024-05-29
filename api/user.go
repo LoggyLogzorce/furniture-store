@@ -9,23 +9,29 @@ import (
 	"time"
 )
 
-func CreateUser(user entity.User) bool {
+func CreateUser(userData map[string]string) bool {
 	var checkUser entity.User
-	db.DB().Where("login = ?", user.Login).First(&checkUser)
+	db.DB().Where("login = ?", userData["login"]).First(&checkUser)
 	if checkUser.Login == "" {
-		db.DB().Create(&user)
+		checkUser.Name = userData["username"]
+		checkUser.Login = userData["login"]
+		checkUser.Password = userData["password"]
+		checkUser.Role = "user"
+		db.DB().Create(&checkUser)
 		return true
 	}
 	return false
 }
 
-func UserRead(user entity.User) (http.Cookie, string) {
-	db.DB().Where("login = ?", user.Login).First(&user)
+func UserRead(userData map[string]string) (http.Cookie, string) {
+	var user entity.User
+	db.DB().Where("login = ? and password = ?", userData["login"], userData["password"]).First(&user)
 	if user.Uid != 0 {
+		timeExpired := 1 * time.Hour
 		token := entity.Token{
 			Uid:     user.Uid,
-			Token:   CreateToken(user.Login, user.Role, 2*time.Minute),
-			Expired: time.Now().Add(20 * time.Minute),
+			Token:   CreateToken(user.Login, user.Role, timeExpired),
+			Expired: time.Now().Add(timeExpired),
 		}
 
 		cookie := http.Cookie{

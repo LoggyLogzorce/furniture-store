@@ -18,22 +18,22 @@
         <input type="password" id="password" name="password" required>
 
         <input type="submit" value="Login"><br>
-        <br><input onclick="location.href='/register'" type="submit" value="Register"></input>
+        <br><input onclick="location.href='/registration'" type="submit" value="Register"></input>
     </form>
 </div>
 
 <script>
     document.getElementById("loginForm").addEventListener("submit", function(event) {
         event.preventDefault(); // Предотвращение стандартного поведения формы (отправка)
-
-        var formData = new FormData(this);
+        const login = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
 
         fetch("/login", {
             method: "POST",
             headers: {
-                "Content-Type": "application/x-www-form-urlencoded"
+                "Content-Type": "application/json"
             },
-            body: new URLSearchParams(formData)
+            body: JSON.stringify({login, password})
         })
             .then(response => {
                 if (!response.ok) {

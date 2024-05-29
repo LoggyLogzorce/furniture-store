@@ -97,15 +97,17 @@ func userHandle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if pathArr[0] == "register" {
+	if pathArr[0] == "registration" {
 		sendFileContent("./static/html/register.html", ctx)
 		return
 	}
 
 	if pathArr[0] == "login" {
-		var user entity.User
-		user.Login = r.FormValue("username")
-		user.Password = r.FormValue("password")
+		var user map[string]string
+		if err := json.NewDecoder(ctx.Request.Body).Decode(&user); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 
 		cookie, role := api.UserRead(user)
 
@@ -128,19 +130,24 @@ func userHandle(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if pathArr[0] == "logout" {
-		var user entity.User
-		user.Name = r.FormValue("username")
-		user.Login = r.FormValue("login")
-		user.Password = r.FormValue("password")
-		user.Role = "user"
+	if pathArr[0] == "register" {
+		//var user entity.User
+		//user.Name = r.FormValue("username")
+		//user.Login = r.FormValue("login")
+		//user.Password = r.FormValue("password")
+		//user.Role = "user"
+		var user map[string]string
+		if err := json.NewDecoder(ctx.Request.Body).Decode(&user); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 
 		created := api.CreateUser(user)
 		if created == true {
-			http.Redirect(ctx.Response, ctx.Request, "/", http.StatusOK)
+			http.Redirect(ctx.Response, ctx.Request, "/", http.StatusCreated)
 			return
 		}
-		http.Error(w, "Unregistered", http.StatusConflict)
+		http.Error(w, "Unregistered. An account with such data already exists.", http.StatusConflict)
 		return
 	}
 
