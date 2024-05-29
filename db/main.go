@@ -12,6 +12,13 @@ const connect = "host=localhost " +
 	"dbname=postgres " +
 	"sslmode=disable"
 
+const connectToTest = "host=localhost " +
+	"port=5432 " +
+	"user=postgres " +
+	"password=1234 " +
+	"dbname=test_db " +
+	"sslmode=disable"
+
 var database *gorm.DB
 var migrate = make([]func(), 0)
 
@@ -38,4 +45,15 @@ func Migrate() {
 	for _, f := range migrate {
 		f()
 	}
+}
+
+func ConnectToTestDB() {
+	db, err := gorm.Open(postgres.Open(connectToTest), &gorm.Config{
+		SkipDefaultTransaction: true,
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	database = db
 }

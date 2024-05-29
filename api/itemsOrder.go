@@ -49,7 +49,6 @@ func DeleteItemsOrder(rowData map[string]string, token string) {
 
 	product := uint32(Id)
 	login, err := GetLoginFromToken(token)
-	fmt.Println(login)
 	if err != nil {
 		log.Println(err)
 	}
@@ -60,8 +59,6 @@ func DeleteItemsOrder(rowData map[string]string, token string) {
 
 	db.DB().Where("login = ?", login).Find(&user)
 	db.DB().Where("user_id = ?", user.Uid).Find(&order)
-
-	fmt.Println(user)
 	db.DB().Where("order_id = ? and product = ?", order.Id, product).Delete(&itemsOrder)
 }
 
@@ -99,5 +96,4 @@ func AddCart(rowData map[string]string, token string) {
 	}
 	itemOrder.Quantity += 1
 	db.DB().Where("order_id = ? and product = ?", order.Id, itemOrder.Product).Save(&itemOrder)
-	return
 }
