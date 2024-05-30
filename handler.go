@@ -125,17 +125,13 @@ func userHandle(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				log.Println(err)
 			}
-		} else {
-			http.Error(ctx.Response, "Unauthorized", http.StatusUnauthorized)
+			return
 		}
+		http.Error(ctx.Response, "Unauthorized", http.StatusUnauthorized)
+		return
 	}
 
 	if pathArr[0] == "register" {
-		//var user entity.User
-		//user.Name = r.FormValue("username")
-		//user.Login = r.FormValue("login")
-		//user.Password = r.FormValue("password")
-		//user.Role = "user"
 		var user map[string]string
 		if err := json.NewDecoder(ctx.Request.Body).Decode(&user); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)

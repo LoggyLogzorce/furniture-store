@@ -36,11 +36,10 @@ func UpdateItemsOrder(updatedData map[string]string) {
 		Quantity: Quantity,
 	}
 
-	db.DB().Set("gorm:query_option", "FOR UPDATE").Where("id = ?", Id).Updates(&itemsOrder)
+	db.DB().Where("id = ?", Id).Updates(&itemsOrder)
 }
 
 func DeleteItemsOrder(rowData map[string]string, token string) {
-	fmt.Println(rowData)
 	Id, err := strconv.ParseUint(rowData["id"], 10, 32)
 	if err != nil {
 		log.Println("Ошибка конвертации:", err)
