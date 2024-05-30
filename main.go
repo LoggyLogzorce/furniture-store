@@ -18,7 +18,7 @@ func main() {
 	m.HandleFunc("/data/", getDataHandle)
 
 	server := &http.Server{
-		Addr:         ":8080",
+		Addr:         ":8081",
 		Handler:      m,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
@@ -27,7 +27,7 @@ func main() {
 	db.Connect()
 	db.Migrate()
 
-	log.Println("Listening port :8080...")
+	log.Println("Listening port :8081...")
 	err := server.ListenAndServe()
 	if err != nil {
 		panic(err)

@@ -5,14 +5,14 @@ import (
 	"gorm.io/gorm"
 )
 
-const connect = "host=localhost " +
+const connect = "host=postgres " +
 	"port=5432 " +
 	"user=postgres " +
 	"password=1234 " +
 	"dbname=postgres " +
 	"sslmode=disable"
 
-const connectToTest = "host=localhost " +
+const connectToTest = "host=postgres " +
 	"port=5432 " +
 	"user=postgres " +
 	"password=1234 " +
